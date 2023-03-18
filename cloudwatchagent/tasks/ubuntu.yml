@@ -1,0 +1,22 @@
+---
+
+- name: Download cloudwatch agent
+  ansible.builtin.get_url:
+    url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+    dest: /root/
+
+- name: updating os
+  ansible.builtin.apt:
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600
+    
+- name: install collectd  package
+  ansible.builtin.apt:
+    name: collectd 
+    state: latest
+    update_cache: yes
+
+
+- name: installing cloudwatch agent
+  command: dpkg -i /root/amazon-cloudwatch-agent.deb

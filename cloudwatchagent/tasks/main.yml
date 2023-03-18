@@ -1,0 +1,39 @@
+---
+- name: Setup for Ubuntu
+  include_tasks: "ubuntu.yml"
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Setup for Amazon
+  include_tasks: "amazon-linux.yaml"
+  when: ansible_distribution == 'Amazon'
+- name: CloudWatchAgent configuration
+  template:
+    src: ./config.json
+    dest: /opt/aws/amazon-cloudwatch-agent/bin  
+  register: aws_cloudwatch_agent_configuration
+  notify:
+    - Set the -s switch
+    - Start the CloudWatchAgent
+
+- name: check permission
+  ansible.builtin.file:
+    path: /opt/aws/amazon-cloudwatch-agent/bin/config.json
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Force start the CloudWatchAgent
+  command: >-
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+    -a fetch-config
+    -m ec2
+    -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
+    -s
+
+
+- name: checking commands
+  command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a status | grep -w  status
+  register: result
+- name: Printing output
+  debug:
+    msg: "Cloud-watch-agent status is {{ result.stdout }}"
