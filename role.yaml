@@ -1,0 +1,28 @@
+---
+- hosts: all
+  tasks:
+    - name: installing python3-pip
+      apt:
+        name: python3-pip
+        state: latest
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install boto3 and botocore
+      ansible.builtin.pip:
+        name: 
+          - boto3
+          - botocore
+
+    - name: Create a role with description and tags
+      community.aws.iam_role:
+        name: mynewrole
+        assume_role_policy_document: "{{ lookup('file','policy.json') }}"
+        managed_policies:
+          - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+    - name: attach role to ec2
+      amazon.aws.ec2_instance:
+        iam_instance_profile: mynewrole
+        region: ap-south-1
+        instance_ids: i-00263f1db8c29edc8
+
