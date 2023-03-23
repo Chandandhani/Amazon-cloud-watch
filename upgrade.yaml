@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  become: yes
+  tasks:
+    - name: removing lock file
+      ansible.builtin.command: rm /var/lib/dpkg/lock
+      ignore_errors: true
+
+    - name: removing lock file
+      ansible.builtin.command: dpkg --configure -ay
+      ignore_errors: true
+
+    - name: Install pip
+      apt:
+        name: python3-pip
+        update_cache: yes
+        state: present
+
+    - name: installing python3-pip
+      apt:
+        name: python3-pip
+        state: latest
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install boto3 and botocore
+      ansible.builtin.pip:
+        name:
+          - boto3
+          - botocore
+    - name: update os
+      apt: 
+        update_cache: yes
+        force_apt_get: yes
+        cache_valid_time: 3600
+    - name: upgrade os
+      apt:
+        upgrade: dist
+        force_apt_get: yes
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+      ignore_errors: true
+    - name: Remove dependencies that are no longer required
+      ansible.builtin.apt:
+        autoremove: yes
+
+    - name: Install pip
+      apt:
+        update_cache: yes
+        name:
+          - python3-pip
+
+    - name: Install pexpect
+      pip:
+        name: pexpect
+
+
+    - name: Upgrade all packages to the latest version
+      apt: update_cache=yes upgrade=full
+
+    - name: Ensure update-manager-core is installed.
+      apt: name=update-manager-core state=present
+      #- name: reboot 
+      #reboot:
+      #when: ansible_distribution == 'Ubuntu'
+
+
+
+    - name: Run do-release-upgrade non-interactively.
+      command: do-release-upgrade -f DistUpgradeViewNonInteractive
+
+    - name: Reboot the server.
+      reboot:
+        reboot_timeout: 3600
+      when:
+        - ansible_distribution == 'Ubuntu'
+        - ansible_distribution_version == '20.04.6'
+
